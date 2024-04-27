@@ -19,12 +19,12 @@ except ImportError:
 print(f"[+] Operating with {mode}")
 
 KRCG_URL = "https://static.krcg.org/data/vtes.json"
-SCHEMA_LOCATION = "./cards.xsd"
+SCHEMA_LOCATION = "https://raw.githubusercontent.com/Stolas/SchreckNet-WMRH-CardDB/master/cards.xsd"
 
 def fetch_jobj():
     print(f"[+] Fetching KRCG")
     resp = requests.get(KRCG_URL)
-    print(f"[+] Status Code: {resp.status_code}")
+    resp.raise_for_status()
     return resp.json()
 
 def get_short_name(name):
@@ -201,10 +201,10 @@ if __name__ == '__main__':
     # parser = etree.XMLParser(dtd_validation=True)
     # etree.fromstring(final_xml, parser)
     print("[+] Validating against the schema")
-
     try:
-        with open(SCHEMA_LOCATION, 'r') as fd:
-            xmlschema_doc = etree.parse(fd)
+        resp = requests.get(SCHEMA_LOCATION)
+        resp.raise_for_status()
+        xmlschema_doc = etree.parse(StringIO(resp.text))
 
         xmlschema = etree.XMLSchema(xmlschema_doc)
         xmlschema.assertValid(carddatabase)
@@ -213,6 +213,8 @@ if __name__ == '__main__':
         print(f"[!!] {ex}")
     except etree.DocumentInvalid as ex:
         print(f"[!!] XML is invalid: {ex}")
+    except requests.exceptions.HTTPError as ex:
+        print(f"[!!] Failed to Download Schema, won't validate: {ex}")
 
     with open("schrecknet_wmrh.xml", "wb") as fd:
         fd.write(final_xml)
