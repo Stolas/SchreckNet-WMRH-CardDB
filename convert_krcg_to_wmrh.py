@@ -74,6 +74,7 @@ def get_short_name(name):
     nameLookupDict["Fifth Edition (Companion)"] = "V5C"
     nameLookupDict["Print on Demand"] = "POD"
     nameLookupDict["Promo"] = "Promo"
+    nameLookupDict["Tokens"] = "TK"
     try:
         return nameLookupDict[name]
     except KeyError:
@@ -104,7 +105,7 @@ class Card():
     def __init__(self, jobj):
         self.name = jobj['name']
         self.card_text = jobj['card_text']
-        self.printed_name = jobj['printed_name']
+        self.printed_name = jobj.get('printed_name', None)
         self.types = jobj['types']
         self.is_crypt = "Vampire" in self.types or "Imbued" in self.types
         self.clans = jobj.get('clans', None)
@@ -117,11 +118,12 @@ class Card():
         self.banned = jobj.get('banned', None)
         self.pool_cost = jobj.get('pool_cost', None)
         self.blood_cost = jobj.get('blood_cost', None)
-        self.sets = [get_short_name(set_) for set_ in jobj['sets']]
+        self.sets = [get_short_name(set_) for set_ in jobj.get('sets', [])]
         self.scans = {}
-        for scan in jobj['scans']:
+        for scan in jobj.get('scans', []):
             self.scans[get_short_name(scan)] = jobj['scans'][scan]
         self.rulings = jobj.get('rulings', None)
+        self.token = jobj.get('token', None)
 
     def __str__(self):
         str_  = ""
@@ -140,10 +142,10 @@ def find_cards(jobj):
         found_cards.append(c.__dict__)
     return found_cards
 
-def xml_add_info(info):
-    etree.SubElement(info, "author").text = "SchreckNet Authors"
+def xml_add_info(info, author="SchreckNet Authors", sourceUrl=KRCG_URL):
+    etree.SubElement(info, "author").text = author
     etree.SubElement(info, "createdAt").text = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-    etree.SubElement(info, "sourceUrl").text = KRCG_URL
+    etree.SubElement(info, "sourceUrl").text = sourceUrl
 
 def xml_add_sets(sets, jobj):
     for set_ in find_sets(jobj):
@@ -168,10 +170,11 @@ def xml_add_cards(sets, jobj):
             etree.SubElement(card_set, 'is_crypt').text = 'false'
 
         # Next Sets
-        sets_ = etree.SubElement(card_set, 'sets')
-        for set_ in card['sets']:
-            scan = card['scans'][set_]
-            etree.SubElement(sets_, 'set', name=set_, picURL=scan)
+        if card.get('sets'):
+            sets_ = etree.SubElement(card_set, 'sets')
+            for set_ in card['sets']:
+                scan = card['scans'][set_]
+                etree.SubElement(sets_, 'set', name=set_, picURL=scan)
 
         # Next Types
         for m_type in ['types', 'clans', 'disciplines']:
@@ -194,22 +197,80 @@ def xml_add_cards(sets, jobj):
                     if tag in ruling_text:
                         etree.SubElement(ruling, 'link', tag=tag).text = card_rulings["links"][tag]
 
-if __name__ == '__main__':
-    jobj = fetch_jobj()
+        if card['token']:
+            etree.SubElement(card_set, 'token').text = '1'
 
+        # Todo; add related and reverse-related
+        # if card['related']:
+
+def generate_xml_header():
     attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation")
-    carddatabase = etree.Element("wmrh_carddatabase", {attr_qname: f"urn:{SCHEMA_LOCATION}"},
+    return etree.Element("wmrh_carddatabase", {attr_qname: f"urn:{SCHEMA_LOCATION}"},
             nsmap={'xsi': 'http://www.w3.org/2001/XMLSchema-instance'}, version="1")
 
+def generate_carddb():
+    jobj = fetch_jobj()
+
+    carddatabase = generate_xml_header()
     xml_add_info(etree.SubElement(carddatabase, "info"))
     xml_add_sets(etree.SubElement(carddatabase, "sets"), jobj)
     xml_add_cards(etree.SubElement(carddatabase, "cards"), jobj)
 
-    final_xml = etree.tostring(carddatabase, xml_declaration=True, pretty_print=True, encoding='utf-8')
+    return carddatabase
 
-    # Validate it
-    # parser = etree.XMLParser(dtd_validation=True)
-    # etree.fromstring(final_xml, parser)
+def generate_tokendb():
+    all_tokens = [
+            {'name': 'Edge',
+             'card_text': 'Gain control of the Edge after a successful bleed. Burn the Edge during a referendum to gain 1 vote. If you control the Edge during your unlock phase, you may gain 1 pool from the Blood Bank.',
+             'types': ['Token'],
+             'url': 'https://static.krcg.org/card/edge2.png',
+             'token': 'true',
+             'reverse-related': [
+                '419 Operation', 'Alicia Barrows', 'Alonzo Guillen', 'Amenophobis',
+                'Bulscu', 'Code of Milan Suspended', 'Curse of Nitocris', 'Cyscek',
+                'Deploy the Hand', 'Dreams of the Sphinx', 'Eat the Rich',
+                'Edge Vitiation', 'Emily Carson', 'Enticement', 'Eric Kressida',
+                'Esteem', 'Extortion', 'Fiorenza Savona', 'Form of Corruption',
+                'Free States Rant', 'Gracetius', 'Hand Intervention', 'Hartmut Stover',
+                'Heather Florent, The Opportunist', 'High Priest Angra Mainyu',
+                'Hrothulf', 'Inside Dirt', 'Instability', 'Intisar', 'Isouda de Blaise',
+                'Jazz Wentworth', 'Kalinda', 'Keith Moody', "King's Rising",
+                'Lady Constancia', 'Leverage', 'Lucina', 'Lucinde, Alastor',
+                'Mapatano Utando', 'Marcel de Breau', 'Medic, The', 'Melissa Barton',
+                'Nagaraja', 'Nkule Galadima', 'Off Kilter', 'Ondine "Boudicca" Sinclair',
+                'Patsy', 'Powerbase: Zürich', 'Regaining the Upper Hand', 'Rising, The',
+                'Sabbat Threat', 'Sargon', 'Sarrasine', 'Sennadurek', 'Shard, London, The',
+                'Shatter the Gate', 'Soldat', 'Tereza Rostas', 'Torvus Bloodbeard',
+                'Tragic Love Affair', 'Tyler McGill', 'Urraca', 'Using the Advantage',
+                'Victoria', 'Victorine Lafourcade', 'Vincent Day, Paladin and Paragon',
+                ]},
+            {'name': 'Anarch Counter',
+             'card_text': 'This vampire is considered Anarch. If this vampire change sects burn this counter.',
+             'types': ['Token'],
+             'url': 'https://static.krcg.org/card/anarchcounter.png',
+             'token': 'true',
+            },
+            {'name': 'Black Hand Counter',
+             'card_text': 'This vampire is considered Black hand.',
+             'types': ['Token'],
+             'url': 'https://static.krcg.org/card/corruptioncounter.png',
+             'token': 'true',
+            },
+            {'name': 'Liaison Marker',
+             'card_text': ' This vampire is considered Liaison, unique Independent title that worth 4 votes. If this title would be contested with a younger vampire, the younger vampire immediately yields instead of contesting.',
+             'types': ['Token'],
+             'url': 'https://static.krcg.org/card/liaisonmarker.png',
+             'token': 'true',
+             'reverse-related': ['Rise of the Nephtali']
+            },
+    ]
+
+    tokens = generate_xml_header()
+    xml_add_info(etree.SubElement(tokens, "info"))
+    xml_add_cards(etree.SubElement(tokens, "cards"), all_tokens)
+    return tokens
+
+def validate_xml(xml):
     print("[+] Validating against the schema")
     try:
         if SCHEMA_LOCATION.startswith("http"):
@@ -221,7 +282,7 @@ if __name__ == '__main__':
                 xmlschema_doc = etree.parse(fd)
 
         xmlschema = etree.XMLSchema(xmlschema_doc)
-        xmlschema.assertValid(carddatabase)
+        xmlschema.assertValid(xml)
         print("[+] XML is valid")
     except etree.XMLSchemaParseError as ex:
         print(f"[!!] {ex}")
@@ -230,8 +291,16 @@ if __name__ == '__main__':
     except requests.exceptions.HTTPError as ex:
         print(f"[!!] Failed to Download Schema, won't validate: {ex}")
 
-    with open("schrecknet_wmrh.xml", "wb") as fd:
-        fd.write(final_xml)
+def write_xml_file(xml, filename, pretty_print):
+    with open(filename, "wb") as fd:
+        fd.write(etree.tostring(xml, xml_declaration=True, pretty_print=pretty_print, encoding='utf-8'))
 
-    # with open("wmrh.json", "w") as fd:
-    #     fd.write(json.dumps(wmrh))
+def generate_xml_files(generate_fcn, filename, do_validate=True, pretty_print=True):
+    xml = generate_fcn()
+    if do_validate:
+        validate_xml(xml)
+    write_xml_file(xml, filename, pretty_print)
+
+if __name__ == '__main__':
+    generate_xml_files(generate_carddb, "schrecknet_wmrh.xml")
+    generate_xml_files(generate_tokendb, "tokens.xml")

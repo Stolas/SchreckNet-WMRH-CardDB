@@ -28,7 +28,7 @@
                         <xs:complexType>
                             <xs:all>
                                 <xs:element type="xs:string" name="name" minOccurs="1" maxOccurs="1"/>
-                                <xs:element type="xs:string" name="longname" minOccurs="0" maxOccurs="1" />
+                                <xs:element type="xs:string" name="longname" minOccurs="1" maxOccurs="1" />
                                 <xs:element type="xs:string" name="release_date" minOccurs="0" maxOccurs="1" />
                             </xs:all>
                         </xs:complexType>
@@ -43,7 +43,7 @@
                         <xs:complexType>
                             <xs:sequence>
                                     <xs:element type="xs:string" name="name" />
-                                    <xs:element type="xs:string" name="printed_name" />
+                                    <xs:element type="xs:string" name="printed_name" minOccurs="0" />
                                     <xs:element type="xs:anyURI" name="url" />
                                     <xs:element type="xs:integer" name="group" minOccurs="0" />
                                     <xs:element type="xs:integer" name="capacity" minOccurs="0" />
@@ -53,7 +53,7 @@
                                     <xs:element type="xs:string" name="text" />
                                     <xs:element type="xs:boolean" name="is_crypt" default="false" />
 
-                                    <xs:element name="sets" maxOccurs="unbounded">
+                                    <xs:element name="sets" maxOccurs="unbounded" minOccurs="0">
                                         <xs:complexType>
                                             <xs:sequence>
                                                 <xs:element name="set" maxOccurs="unbounded" minOccurs="1">
