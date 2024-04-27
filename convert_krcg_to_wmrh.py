@@ -20,6 +20,7 @@ print(f"[+] Operating with {mode}")
 
 KRCG_URL = "https://static.krcg.org/data/vtes.json"
 SCHEMA_LOCATION = "https://raw.githubusercontent.com/Stolas/SchreckNet-WMRH-CardDB/master/cards.xsd"
+# SCHEMA_LOCATION = "./cards.xsd"
 
 def fetch_jobj():
     print(f"[+] Fetching KRCG")
@@ -95,19 +96,22 @@ def find_sets(jobj):
                 continue
             unique_set_names.append(set_name)
             short_name = get_short_name(set_name)
-            found_sets.append({'release_date': release_date, 'name': short_name, 'name': set_name})
+            found_sets.append({'release_date': release_date, 'name': short_name, 'longname': set_name})
 
     return found_sets
 
 class Card():
     def __init__(self, jobj):
         self.name = jobj['name']
+        self.card_text = jobj['card_text']
         self.printed_name = jobj['printed_name']
         self.types = jobj['types']
         self.is_crypt = "Vampire" in self.types or "Imbued" in self.types
         self.clans = jobj.get('clans', None)
         self.url = jobj['url']
         self.group = jobj.get('group', None)
+        if self.group == 'ANY':
+            self.group = 0
         self.capacity = jobj.get('capacity', None)
         self.disciplines = jobj.get('disciplines', None)
         self.banned = jobj.get('banned', None)
@@ -152,10 +156,16 @@ def xml_add_cards(sets, jobj):
         card_set = etree.SubElement(sets, "card")
 
         # First Generic Types
-        for key in ['name', 'printed_name', 'url', 'group', 'capacity', 'banned', 'pool_cost', 'blood_cost', 'is_crypt']:
+        for key in ['name', 'printed_name', 'url', 'group', 'capacity', 'banned', 'pool_cost', 'blood_cost']:
             value = card.get(key)
             if value:
                 etree.SubElement(card_set, key).text = str(value)
+
+        etree.SubElement(card_set, 'text').text = card['card_text']
+        if card['is_crypt']:
+            etree.SubElement(card_set, 'is_crypt').text = 'true'
+        else:
+            etree.SubElement(card_set, 'is_crypt').text = 'false'
 
         # Next Sets
         sets_ = etree.SubElement(card_set, 'sets')
@@ -165,9 +175,9 @@ def xml_add_cards(sets, jobj):
 
         # Next Types
         for m_type in ['types', 'clans', 'disciplines']:
-            types = etree.SubElement(card_set, m_type)
             values = card[m_type]
             if values:
+                types = etree.SubElement(card_set, m_type)
                 for type_ in values:
                     etree.SubElement(types, m_type[:-1]).text = type_
 
@@ -195,16 +205,20 @@ if __name__ == '__main__':
     xml_add_sets(etree.SubElement(carddatabase, "sets"), jobj)
     xml_add_cards(etree.SubElement(carddatabase, "cards"), jobj)
 
-    final_xml = etree.tostring(carddatabase, xml_declaration=True, pretty_print=True)
+    final_xml = etree.tostring(carddatabase, xml_declaration=True, pretty_print=True, encoding='utf-8')
 
     # Validate it
     # parser = etree.XMLParser(dtd_validation=True)
     # etree.fromstring(final_xml, parser)
     print("[+] Validating against the schema")
     try:
-        resp = requests.get(SCHEMA_LOCATION)
-        resp.raise_for_status()
-        xmlschema_doc = etree.parse(StringIO(resp.text))
+        if SCHEMA_LOCATION.startswith("http"):
+            resp = requests.get(SCHEMA_LOCATION)
+            resp.raise_for_status()
+            xmlschema_doc = etree.parse(StringIO(resp.text))
+        else:
+            with open(SCHEMA_LOCATION, 'r') as fd:
+                xmlschema_doc = etree.parse(fd)
 
         xmlschema = etree.XMLSchema(xmlschema_doc)
         xmlschema.assertValid(carddatabase)
