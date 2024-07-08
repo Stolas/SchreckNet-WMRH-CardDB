@@ -1,0 +1,15 @@
+{
+	"servers": [{
+		{
+			"id": 0,
+			"name": "Harass",
+			"site": "https://bloodhunt.net/",
+			"location": "USA",
+			"host": "server.cockatrice.us",
+			"port": 4747,
+			"websocketPort": 443,
+			"authRequired": true,
+			"regRequired": true
+		}
+	]
+}
