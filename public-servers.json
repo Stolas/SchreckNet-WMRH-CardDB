@@ -1,6 +1,5 @@
 {
 	"servers": [{
-		{
 			"id": 0,
 			"name": "Harass",
 			"site": "https://bloodhunt.net/",
@@ -10,6 +9,5 @@
 			"websocketPort": 443,
 			"authRequired": true,
 			"regRequired": true
-		}
-		}]
+	}]
 }
