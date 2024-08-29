@@ -3,10 +3,9 @@
 			"id": 0,
 			"name": "Blood Hunt",
 			"site": "https://bloodhunt.net/",
-			"location": "SW",
+			"location": "SE",
 			"host": "bloodhunt.net",
-			"port": 4747,
-			"websocketPort": 443,
+			"port": 4748,
 			"authRequired": true,
 			"regRequired": true
 	}]
