@@ -10,8 +10,7 @@ import json
 from datetime import datetime
 from io import StringIO
 import cbor2
-
-
+import zlib
 
 KRCG_URL = "https://static.krcg.org/data/vtes.json"
 
@@ -141,7 +140,7 @@ def write_cbor2_file(carddb, filename):
     binary_blob = cbor2.dumps(carddb)
 
     with open(filename, "wb") as fd:
-        fd.write(binary_blob)
+        fd.write(zlib.compress(binary_blob, level=9))
     print(f"Created: {filename}, {len(carddb['cards'])} Cards and {len(carddb['sets'])} sets")
 
 def generate_wmrh_files(generate_fcn, filename):
