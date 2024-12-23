@@ -80,10 +80,11 @@ def add_cards(jobj):
     _cards = {}
     _crypt = []
     _library = []
+    # _unique_list = {"types":[], "clans": [], "disciplines": []}
     for card in find_cards(jobj):
         _card = {}
         # First Generic Types
-        for key in ['id', 'name', 'printed_name', 'url', 'group', 'capacity', 'banned', 'pool_cost', 'blood_cost', 'types', 'clans', 'disciplines', 'token']:
+        for key in ['id', 'name', 'printed_name', 'url', 'group', 'capacity', 'banned', 'pool_cost', 'blood_cost' ]:
             v = card.get(key, None)
             if v == None:
                 continue
@@ -93,6 +94,11 @@ def add_cards(jobj):
         if text != None:
             _card["text"] = text
         is_crypt = card['is_crypt']
+
+        for key in [ 'types', 'clans', 'disciplines' ]:
+            if card[key] == None:
+                continue
+            _card[key] = card[key]
 
         # Next Sets
         if card.get('sets'):
@@ -122,6 +128,7 @@ def add_cards(jobj):
             _library.append(_card)
         _cards["crypt"] = _crypt
         _cards["library"] = _library
+    #@ import ipdb; ipdb.set_trace()
     return _cards
 
 def generate_carddb():
@@ -144,7 +151,7 @@ def generate_tokens():
 
 
 def write_file(carddb, filename):
-    binary_blob = json.dumps(carddb)
+    binary_blob = json.dumps(carddb, indent=4)
 
     with open(f"{filename}.dat", "w") as fd:
         fd.write(binary_blob)
