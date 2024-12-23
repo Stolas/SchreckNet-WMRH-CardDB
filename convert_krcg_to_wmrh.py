@@ -74,7 +74,7 @@ def find_cards(jobj):
     return found_cards
 
 def add_info(author="SchreckNet Authors", sourceUrl=KRCG_URL):
-    return {"author": author, "createdAt": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "sourceUrl": sourceUrl, "formatVersion": 122324} # mmddyy
+    return {"author": author, "createdAt": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "sourceUrl": sourceUrl, "formatVersion": 1}
 
 def add_cards(jobj):
     _cards = {}
@@ -145,11 +145,18 @@ def generate_carddb():
 def generate_tokens():
     tokens = []
 
-    tokens.append({"id": -1, "name": "Anarch Counter", "text": "This vampire is considered Anarch. If this vampire changs sects, burn this counter.", "sets": [{"name": "token", "picUrl": "XXX"}]})
-    tokens.append({"id": -2, "name": "Liaison Counter", "text": "Title. This vampire is considered Liaison, unique Independent title that worth 4 votes. If this title would be contested with a younger vampire, the younger vampire immediately yields instead of contesting.", "sets": [{"name": "token", "picUrl": "XXX"}]})
-    tokens.append({"id": -3, "name": "Corruption Counter", "text": "", "sets": [{"name": "token", "picUrl": "XXX"}]})
-    tokens.append({"id": -4, "name": "Black Hand Counter", "text": "This vampire is considered Black Hand.", "sets": [{"name": "token", "picUrl": "XXX"}]})
-    tokens.append({"id": -1, "name": "Disease Counter", "text": "When this vampire is in combat at close range with another vampire, the second vampire gets a counter as well. When this vampire unlocks, he or she burns a blood or, if unable, burns the disease counter. A vampire can have only one disease counter.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    # VTES Card Numbers work like so.
+    # 100000+ library
+    # 110000+ playtest library
+    # 200000+ crypt
+    # 210000+ playtest crypt
+    # Smeea recommends using 300000+ for other stuff.
+
+    tokens.append({"id": 300000, "name": "Anarch Counter", "text": "This vampire is considered Anarch. If this vampire changs sects, burn this counter.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": 300001, "name": "Liaison Counter", "text": "Title. This vampire is considered Liaison, unique Independent title that worth 4 votes. If this title would be contested with a younger vampire, the younger vampire immediately yields instead of contesting.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": 300002, "name": "Corruption Counter", "text": "", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": 300003, "name": "Black Hand Counter", "text": "This vampire is considered Black Hand.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": 300004, "name": "Disease Counter", "text": "When this vampire is in combat at close range with another vampire, the second vampire gets a counter as well. When this vampire unlocks, he or she burns a blood or, if unable, burns the disease counter. A vampire can have only one disease counter.", "sets": [{"name": "token", "picUrl": "XXX"}]})
 
     return tokens
 
@@ -157,7 +164,7 @@ def generate_tokens():
 def write_file(carddb, filename):
     binary_blob = json.dumps(carddb, indent=5)
 
-    with open(f"{filename}.dat", "w") as fd:
+    with open(f"{filename}.json", "w") as fd:
         fd.write(binary_blob)
 
     compressed_blob = zlib.compress(binary_blob.encode(), level=9)
