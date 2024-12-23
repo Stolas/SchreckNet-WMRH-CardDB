@@ -55,7 +55,6 @@ class Card():
         for scan in jobj.get('scans', []):
             self.scans[scan] = jobj['scans'][scan]
         self.rulings = jobj.get('rulings', None)
-        self.token = jobj.get('token', None)
 
     def __str__(self):
         str_  = ""
@@ -132,17 +131,17 @@ def add_cards(jobj):
     return _cards
 
 def generate_carddb():
-    jobj = fetch_jobj()
+    tokens = []
 
-    carddatabase = {}
-    carddatabase['info'] = add_info();
-    carddatabase['sets'] = find_sets(jobj);
-    carddatabase['cards'] = add_cards(jobj);
-    return carddatabase
+    tokens.append({"id": -1, "name": "Anarch Counter", "text": "This vampire is considered Anarch. If this vampire changs sects, burn this counter.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": -2, "name": "Liaison Counter", "text": "Title. This vampire is considered Liaison, unique Independent title that worth 4 votes. If this title would be contested with a younger vampire, the younger vampire immediately yields instead of contesting.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": -3, "name": "Corruption Counter", "text": "", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": -4, "name": "Black Hand Counter", "text": "This vampire is considered Black Hand.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+    tokens.append({"id": -5, "name": "Disease Counter", "text": "When this vampire is in combat at close range with another vampire, the second vampire gets a counter as well. When this vampire unlocks, he or she burns a blood or, if unable, burns the disease counter. A vampire can have only one disease counter.", "sets": [{"name": "token", "picUrl": "XXX"}]})
+
+    return tokens
 
 def generate_tokens():
-    jobj = fetch_jobj()
-
     carddatabase = {}
     carddatabase['info'] = add_info();
     carddatabase['sets'] = ['Tokens']
@@ -151,7 +150,8 @@ def generate_tokens():
 
 
 def write_file(carddb, filename):
-    binary_blob = json.dumps(carddb, indent=4)
+    binary_blob = json.dumps(carddb, indent=5)
+    carddatabase['cards'] = add_cards(jobj);
 
     with open(f"{filename}.dat", "w") as fd:
         fd.write(binary_blob)
