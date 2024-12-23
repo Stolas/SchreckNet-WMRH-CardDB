@@ -139,8 +139,12 @@ def generate_tokens():
 def write_cbor2_file(carddb, filename):
     binary_blob = cbor2.dumps(carddb)
 
-    with open(filename, "wb") as fd:
-        fd.write(zlib.compress(binary_blob, level=9))
+    with open(f"{filename}.bin", "wb") as fd:
+        fd.write(binary_blob)
+
+    compressed_blob = zlib.compress(binary_blob, level=9)
+    with open(f"{filename}_compressed.bin", "wb") as fd:
+        fd.write(compressed_blob)
     print(f"Created: {filename}, {len(carddb['cards'])} Cards and {len(carddb['sets'])} sets")
 
 def generate_wmrh_files(generate_fcn, filename):
@@ -148,5 +152,5 @@ def generate_wmrh_files(generate_fcn, filename):
     write_cbor2_file(carddb, filename)
 
 if __name__ == '__main__':
-    generate_wmrh_files(generate_carddb, "schrecknet_wmrh.bin")
+    generate_wmrh_files(generate_carddb, "schrecknet_wmrh")
     # generate_wmrh_files(generate_tokendb, "tokens.bin")
