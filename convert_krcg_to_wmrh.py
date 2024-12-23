@@ -9,7 +9,7 @@ import requests
 import json
 from datetime import datetime
 from io import StringIO
-import cbor2
+# import cbor2
 import zlib
 
 KRCG_URL = "https://static.krcg.org/data/vtes.json"
@@ -74,10 +74,12 @@ def find_cards(jobj):
     return found_cards
 
 def add_info(author="SchreckNet Authors", sourceUrl=KRCG_URL):
-    return {"author": author, "createdAt": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "sourceUrl": sourceUrl}
+    return {"author": author, "createdAt": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "sourceUrl": sourceUrl, "formatVersion": 122324} # mmddyy
 
 def add_cards(jobj):
-    _cards = []
+    _cards = {}
+    _crypt = []
+    _library = []
     for card in find_cards(jobj):
         _card = {}
         # First Generic Types
@@ -90,7 +92,7 @@ def add_cards(jobj):
         text = card.get('card_text', None)
         if text != None:
             _card["text"] = text
-        _card["is_crypt"] = card['is_crypt']
+        is_crypt = card['is_crypt']
 
         # Next Sets
         if card.get('sets'):
@@ -114,7 +116,12 @@ def add_cards(jobj):
                 rulings.append(entry_)
 
         _card['rulings'] = rulings
-        _cards.append(_card)
+        if is_crypt:
+            _crypt.append(_card)
+        else:
+            _library.append(_card)
+        _cards["crypt"] = _crypt
+        _cards["library"] = _library
     return _cards
 
 def generate_carddb():
@@ -136,20 +143,20 @@ def generate_tokens():
     return carddatabase
 
 
-def write_cbor2_file(carddb, filename):
-    binary_blob = cbor2.dumps(carddb)
+def write_file(carddb, filename):
+    binary_blob = json.dumps(carddb)
 
-    with open(f"{filename}.bin", "wb") as fd:
+    with open(f"{filename}.dat", "w") as fd:
         fd.write(binary_blob)
 
-    compressed_blob = zlib.compress(binary_blob, level=9)
-    with open(f"{filename}_compressed.bin", "wb") as fd:
+    compressed_blob = zlib.compress(binary_blob.encode(), level=9)
+    with open(f"{filename}_compressed.dat", "wb") as fd:
         fd.write(compressed_blob)
-    print(f"Created: {filename}, {len(carddb['cards'])} Cards and {len(carddb['sets'])} sets")
+    print(f"Created: {filename}, {len(carddb['cards']['crypt'])} Crypt Cards, {len(carddb['cards']['library'])} Library Cards, and {len(carddb['sets'])} sets")
 
 def generate_wmrh_files(generate_fcn, filename):
     carddb = generate_fcn()
-    write_cbor2_file(carddb, filename)
+    write_file(carddb, filename)
 
 if __name__ == '__main__':
     generate_wmrh_files(generate_carddb, "schrecknet_wmrh")
